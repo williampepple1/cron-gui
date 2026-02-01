@@ -1,0 +1,31 @@
+Welcome to Cron Job Manager!
+=============================
+
+Cron Job Manager is a powerful Windows application that allows you to schedule and automate your scripts and programs.
+
+KEY FEATURES:
+-------------
+* Schedule scripts to run at regular intervals (minutes, hours, or days)
+* Supports Python (.py), PowerShell (.ps1), Batch (.bat, .cmd), Node.js (.js), and executable files
+* Runs silently in the system tray - no window clutter
+* Auto-start with Windows - your jobs run even after restart
+* Activity logging to track job execution history
+* Simple and intuitive interface
+
+HOW IT WORKS:
+-------------
+1. Add your scripts using the "Add Job" button
+2. Set the interval (how often to run)
+3. The app runs in the background and executes your scripts on schedule
+4. Check the activity log to see execution results
+
+SYSTEM REQUIREMENTS:
+--------------------
+* Windows 10 or later
+* No additional software required
+
+BACKGROUND OPERATION:
+---------------------
+This application is designed to run continuously in your system tray. When you close the window, it minimizes to the tray and continues running your scheduled jobs. To completely exit the application, use Windows Task Manager.
+
+Click Next to continue with the installation.
