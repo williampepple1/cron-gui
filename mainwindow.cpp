@@ -9,6 +9,7 @@
 #include <QMessageBox>
 #include <QApplication>
 #include <QStyle>
+#include <QScrollBar>
 
 MainWindow::MainWindow(bool startHidden, QWidget *parent)
     : QMainWindow(parent)
@@ -35,6 +36,15 @@ MainWindow::MainWindow(bool startHidden, QWidget *parent)
     
     // Start the scheduler
     m_cronManager->start();
+    
+    // Log startup info
+    onLogMessage("Application started");
+    onLogMessage(QString("Loaded %1 job(s)").arg(m_cronManager->getJobs().size()));
+    for (const CronJob& job : m_cronManager->getJobs()) {
+        if (job.enabled) {
+            onLogMessage(QString("  - %1: next run at %2").arg(job.name, job.nextRun.toString("yyyy-MM-dd hh:mm:ss")));
+        }
+    }
     
     // Handle hidden start
     if (m_startHidden) {
@@ -107,8 +117,8 @@ void MainWindow::setupUI()
     m_logView = new QTextEdit(this);
     m_logView->setReadOnly(true);
     m_logView->setMinimumHeight(200);
-    m_logView->setAcceptRichText(true);
-    m_logView->setStyleSheet("QTextEdit { font-family: Consolas, monospace; font-size: 10pt; background-color: #fafafa; }");
+    m_logView->setAcceptRichText(false);  // Use plain text for reliability
+    m_logView->setStyleSheet("QTextEdit { font-family: Consolas, monospace; font-size: 10pt; background-color: #f5f5f5; color: #000000; }");
     
     logLayout->addWidget(m_logView);
     splitter->addWidget(logGroup);
@@ -304,17 +314,14 @@ void MainWindow::onJobExecuted(const QString& jobId, bool success, const QString
     
     // Log the full output if there is any
     if (!output.trimmed().isEmpty()) {
-        // Add separator and output
-        QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-        m_logView->append(QString("<span style='color: #666;'>--- Output from %1 ---</span>").arg(jobName));
-        
-        // Format and display the full output
-        QString formattedOutput = output.trimmed();
-        formattedOutput.replace("\n", "<br>");
-        m_logView->append(QString("<pre style='margin: 5px 0; padding: 5px; background: %1; font-family: Consolas, monospace;'>%2</pre>")
-            .arg(success ? "#e8f5e9" : "#ffebee", formattedOutput));
-        m_logView->append(QString("<span style='color: #666;'>--- End of output ---</span>"));
+        m_logView->append(QString("--- Output from %1 ---").arg(jobName));
+        m_logView->append(output.trimmed());
+        m_logView->append("--- End of output ---");
+        m_logView->append("");  // Empty line for spacing
     }
+    
+    // Scroll to bottom to show latest
+    m_logView->verticalScrollBar()->setValue(m_logView->verticalScrollBar()->maximum());
     
     // Show tray notification (keep this short)
     QString notifyText = output.trimmed().isEmpty() ? "Completed" : output.left(100);
