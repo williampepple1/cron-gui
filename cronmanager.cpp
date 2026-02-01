@@ -191,11 +191,30 @@ void CronManager::executeJob(CronJob& job)
         emit logMessage(QString("Working directory: %1").arg(scriptInfo.absolutePath()));
     }
     
-    // Set environment variables for proper encoding (fixes Unicode issues on Windows)
+    // Set environment variables for proper UTF-8 encoding (fixes Unicode/emoji issues on Windows)
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    
+    // Python UTF-8 support
     env.insert("PYTHONIOENCODING", "utf-8");
     env.insert("PYTHONUTF8", "1");
     env.insert("PYTHONLEGACYWINDOWSSTDIO", "0");
+    
+    // Node.js UTF-8 support
+    env.insert("NODE_OPTIONS", "--experimental-vm-modules");
+    
+    // PowerShell UTF-8 support
+    env.insert("POWERSHELL_TELEMETRY_OPTOUT", "1");
+    
+    // General Windows UTF-8 console support
+    env.insert("LANG", "en_US.UTF-8");
+    env.insert("LC_ALL", "en_US.UTF-8");
+    
+    // Ruby UTF-8 support
+    env.insert("RUBYOPT", "-Eutf-8");
+    
+    // Set console output code page to UTF-8 for cmd/batch scripts
+    env.insert("CHCP", "65001");
+    
     process->setProcessEnvironment(env);
     
     QString jobId = job.id;
