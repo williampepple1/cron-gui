@@ -75,6 +75,18 @@ QVector<CronJob>& CronManager::getJobs()
     return m_jobs;
 }
 
+void CronManager::runJobNow(const QString& id)
+{
+    for (int i = 0; i < m_jobs.size(); ++i) {
+        if (m_jobs[i].id == id) {
+            emit logMessage(QString("Manually running job: %1").arg(m_jobs[i].name));
+            executeJob(m_jobs[i]);
+            return;
+        }
+    }
+    emit logMessage(QString("Job not found: %1").arg(id));
+}
+
 void CronManager::start()
 {
     if (!m_running) {
@@ -178,6 +190,13 @@ void CronManager::executeJob(CronJob& job)
         process->setWorkingDirectory(scriptInfo.absolutePath());
         emit logMessage(QString("Working directory: %1").arg(scriptInfo.absolutePath()));
     }
+    
+    // Set environment variables for proper encoding (fixes Unicode issues on Windows)
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert("PYTHONIOENCODING", "utf-8");
+    env.insert("PYTHONUTF8", "1");
+    env.insert("PYTHONLEGACYWINDOWSSTDIO", "0");
+    process->setProcessEnvironment(env);
     
     QString jobId = job.id;
     

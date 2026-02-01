@@ -19,6 +19,7 @@ public:
     void addJob(const CronJob& job);
     void updateJob(const CronJob& job);
     void removeJob(const QString& id);
+    void runJobNow(const QString& id);  // Run a job immediately
     CronJob* getJob(const QString& id);
     QVector<CronJob>& getJobs();
 

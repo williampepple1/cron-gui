@@ -102,6 +102,10 @@ void MainWindow::setupUI()
     m_jobTable->setHorizontalHeaderLabels({"Name", "Script", "Interval", "Last Run", "Next Run", "Status"});
     m_jobTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     m_jobTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+    m_jobTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    m_jobTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents);  // Last Run
+    m_jobTable->horizontalHeader()->setSectionResizeMode(4, QHeaderView::ResizeToContents);  // Next Run
+    m_jobTable->horizontalHeader()->setSectionResizeMode(5, QHeaderView::ResizeToContents);
     m_jobTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_jobTable->setSelectionMode(QAbstractItemView::SingleSelection);
     m_jobTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -273,14 +277,9 @@ void MainWindow::runJobNow()
     }
     
     QString jobId = m_jobTable->item(row, 0)->data(Qt::UserRole).toString();
-    CronJob* job = m_cronManager->getJob(jobId);
     
-    if (job) {
-        // Reset next run to now to trigger immediate execution
-        job->nextRun = QDateTime::currentDateTime().addSecs(-1);
-        m_cronManager->updateJob(*job);
-        onLogMessage(QString("Manually triggered: %1").arg(job->name));
-    }
+    // Run the job immediately
+    m_cronManager->runJobNow(jobId);
 }
 
 void MainWindow::toggleJobEnabled()
@@ -366,8 +365,20 @@ void MainWindow::refreshJobTable()
         m_jobTable->setItem(row, 1, scriptItem);
         
         m_jobTable->setItem(row, 2, new QTableWidgetItem(formatInterval(job.intervalMinutes)));
-        m_jobTable->setItem(row, 3, new QTableWidgetItem(formatDateTime(job.lastRun)));
-        m_jobTable->setItem(row, 4, new QTableWidgetItem(formatDateTime(job.nextRun)));
+        
+        // Last Run with tooltip
+        QTableWidgetItem* lastRunItem = new QTableWidgetItem(formatDateTime(job.lastRun));
+        if (job.lastRun.isValid()) {
+            lastRunItem->setToolTip(job.lastRun.toString("dddd, MMMM d, yyyy 'at' h:mm:ss AP"));
+        }
+        m_jobTable->setItem(row, 3, lastRunItem);
+        
+        // Next Run with tooltip
+        QTableWidgetItem* nextRunItem = new QTableWidgetItem(formatDateTime(job.nextRun));
+        if (job.nextRun.isValid()) {
+            nextRunItem->setToolTip(job.nextRun.toString("dddd, MMMM d, yyyy 'at' h:mm:ss AP"));
+        }
+        m_jobTable->setItem(row, 4, nextRunItem);
         
         QString status = job.enabled ? "Enabled" : "Disabled";
         QTableWidgetItem* statusItem = new QTableWidgetItem(status);
