@@ -39,8 +39,8 @@ PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 
 ; Visual settings
-WizardImageFile=
-WizardSmallImageFile=
+WizardImageFile=icons\wizard_image.bmp
+WizardSmallImageFile=icons\wizard_small.bmp
 DisableWelcomePage=no
 
 [Languages]
