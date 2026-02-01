@@ -133,14 +133,17 @@ void MainWindow::setupSystemTray()
 {
     m_trayIcon = new QSystemTrayIcon(this);
     
-    // Use custom icon if available, otherwise use application style icon
+    // Use custom icon
     QIcon trayIcon(":/icons/tray_icon.png");
-    if (trayIcon.isNull()) {
+    if (!trayIcon.isNull()) {
+        m_trayIcon->setIcon(trayIcon);
+        setWindowIcon(trayIcon);
+    } else {
         // Fallback to a standard icon
-        trayIcon = style()->standardIcon(QStyle::SP_ComputerIcon);
+        QIcon fallback = style()->standardIcon(QStyle::SP_ComputerIcon);
+        m_trayIcon->setIcon(fallback);
+        setWindowIcon(fallback);
     }
-    m_trayIcon->setIcon(trayIcon);
-    setWindowIcon(trayIcon);
     m_trayIcon->setToolTip("Cron Job Manager");
     
     m_trayMenu = new QMenu(this);
