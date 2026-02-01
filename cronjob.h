@@ -11,12 +11,14 @@ struct CronJob {
     QString name;
     QString scriptPath;
     QString arguments;
-    int intervalMinutes;  // Run every X minutes
+    QString customCommand;    // Custom runtime/command (e.g., "ruby", "perl", "C:\\path\\to\\runtime.exe")
+    bool useCustomCommand;    // If true, use customCommand instead of auto-detection
+    int intervalMinutes;      // Run every X minutes
     bool enabled;
     QDateTime lastRun;
     QDateTime nextRun;
 
-    CronJob() : intervalMinutes(60), enabled(true) {
+    CronJob() : useCustomCommand(false), intervalMinutes(60), enabled(true) {
         id = QUuid::createUuid().toString(QUuid::WithoutBraces);
     }
 
@@ -26,6 +28,8 @@ struct CronJob {
         obj["name"] = name;
         obj["scriptPath"] = scriptPath;
         obj["arguments"] = arguments;
+        obj["customCommand"] = customCommand;
+        obj["useCustomCommand"] = useCustomCommand;
         obj["intervalMinutes"] = intervalMinutes;
         obj["enabled"] = enabled;
         obj["lastRun"] = lastRun.toString(Qt::ISODate);
@@ -39,6 +43,8 @@ struct CronJob {
         job.name = obj["name"].toString();
         job.scriptPath = obj["scriptPath"].toString();
         job.arguments = obj["arguments"].toString();
+        job.customCommand = obj["customCommand"].toString();
+        job.useCustomCommand = obj["useCustomCommand"].toBool(false);
         job.intervalMinutes = obj["intervalMinutes"].toInt(60);
         job.enabled = obj["enabled"].toBool(true);
         job.lastRun = QDateTime::fromString(obj["lastRun"].toString(), Qt::ISODate);

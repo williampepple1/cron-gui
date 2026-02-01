@@ -118,26 +118,47 @@ void CronManager::executeJob(CronJob& job)
         args = job.arguments.split(" ", Qt::SkipEmptyParts);
     }
     
-    // Determine how to run the script based on extension
-    QFileInfo fileInfo(job.scriptPath);
-    QString ext = fileInfo.suffix().toLower();
-    
-    if (ext == "py") {
+    // Check if user specified a custom command
+    if (job.useCustomCommand && !job.customCommand.isEmpty()) {
+        // Use the custom command as the program
+        program = job.customCommand;
         args.prepend(job.scriptPath);
-        program = "python";
-    } else if (ext == "ps1") {
-        args.prepend(job.scriptPath);
-        args.prepend("-File");
-        args.prepend("-ExecutionPolicy");
-        args.prepend("Bypass");
-        program = "powershell";
-    } else if (ext == "bat" || ext == "cmd") {
-        args.prepend(job.scriptPath);
-        args.prepend("/c");
-        program = "cmd";
-    } else if (ext == "js") {
-        args.prepend(job.scriptPath);
-        program = "node";
+        emit logMessage(QString("Using custom command: %1").arg(program));
+    } else {
+        // Auto-detect based on file extension
+        QFileInfo fileInfo(job.scriptPath);
+        QString ext = fileInfo.suffix().toLower();
+        
+        if (ext == "py") {
+            args.prepend(job.scriptPath);
+            program = "python";
+        } else if (ext == "ps1") {
+            args.prepend(job.scriptPath);
+            args.prepend("-File");
+            args.prepend("-ExecutionPolicy");
+            args.prepend("Bypass");
+            program = "powershell";
+        } else if (ext == "bat" || ext == "cmd") {
+            args.prepend(job.scriptPath);
+            args.prepend("/c");
+            program = "cmd";
+        } else if (ext == "js") {
+            args.prepend(job.scriptPath);
+            program = "node";
+        } else if (ext == "rb") {
+            args.prepend(job.scriptPath);
+            program = "ruby";
+        } else if (ext == "pl") {
+            args.prepend(job.scriptPath);
+            program = "perl";
+        } else if (ext == "php") {
+            args.prepend(job.scriptPath);
+            program = "php";
+        } else if (ext == "sh") {
+            args.prepend(job.scriptPath);
+            program = "bash";
+        }
+        // For .exe and unknown extensions, run directly (program = scriptPath)
     }
     
     QString jobId = job.id;

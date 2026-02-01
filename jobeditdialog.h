@@ -22,7 +22,9 @@ public:
 
 private slots:
     void browseScript();
+    void browseCustomCommand();
     void validateAndAccept();
+    void onCustomCommandToggled(bool checked);
 
 private:
     void setupUI();
@@ -32,6 +34,9 @@ private:
     QLineEdit* m_scriptPathEdit;
     QPushButton* m_browseButton;
     QLineEdit* m_argumentsEdit;
+    QCheckBox* m_useCustomCommandCheck;
+    QLineEdit* m_customCommandEdit;
+    QPushButton* m_browseCommandButton;
     QSpinBox* m_intervalSpinBox;
     QComboBox* m_intervalUnitCombo;
     QCheckBox* m_enabledCheck;
