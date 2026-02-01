@@ -207,7 +207,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 {
-    if (reason == QSystemTrayIcon::DoubleClick) {
+    // Open window on single click, double click, or middle click
+    if (reason == QSystemTrayIcon::Trigger ||        // Single click
+        reason == QSystemTrayIcon::DoubleClick ||    // Double click
+        reason == QSystemTrayIcon::MiddleClick) {    // Middle click
         showWindow();
     }
 }

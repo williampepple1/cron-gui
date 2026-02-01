@@ -4,6 +4,10 @@
 #include <QSharedMemory>
 #include <QMessageBox>
 #include <QSystemTrayIcon>
+#include <QLocalServer>
+#include <QLocalSocket>
+
+const QString SERVER_NAME = "CronGUI_LocalServer";
 
 int main(int argc, char *argv[])
 {
@@ -26,10 +30,16 @@ int main(int argc, char *argv[])
     QSharedMemory sharedMem("CronGUI_SingleInstance_Lock");
     
     if (!sharedMem.create(1)) {
-        // Another instance is already running
-        QMessageBox::information(nullptr, "Cron Job Manager",
-            "Another instance of Cron Job Manager is already running.\n"
-            "Check the system tray for the existing instance.");
+        // Another instance is already running - try to activate it
+        QLocalSocket socket;
+        socket.connectToServer(SERVER_NAME);
+        if (socket.waitForConnected(1000)) {
+            // Send "show" command to existing instance
+            socket.write("show");
+            socket.waitForBytesWritten(1000);
+            socket.disconnectFromServer();
+        }
+        // Exit silently - the existing instance will show itself
         return 0;
     }
     
@@ -44,6 +54,24 @@ int main(int argc, char *argv[])
     QApplication::setQuitOnLastWindowClosed(false);
     
     MainWindow w(startHidden);
+    
+    // Set up local server to listen for activation requests from other instances
+    QLocalServer::removeServer(SERVER_NAME);  // Clean up any stale server
+    QLocalServer server;
+    if (server.listen(SERVER_NAME)) {
+        QObject::connect(&server, &QLocalServer::newConnection, [&w, &server]() {
+            QLocalSocket* socket = server.nextPendingConnection();
+            if (socket) {
+                socket->waitForReadyRead(1000);
+                QByteArray data = socket->readAll();
+                if (data == "show") {
+                    w.showWindow();
+                }
+                socket->disconnectFromServer();
+                socket->deleteLater();
+            }
+        });
+    }
     
     if (!startHidden) {
         w.show();

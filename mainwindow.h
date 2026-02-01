@@ -26,6 +26,9 @@ public:
     MainWindow(bool startHidden = false, QWidget *parent = nullptr);
     ~MainWindow();
 
+public slots:
+    void showWindow();  // Public so it can be called from other instances
+
 protected:
     void closeEvent(QCloseEvent *event) override;
 
@@ -41,7 +44,6 @@ private slots:
     void onLogMessage(const QString& message);
     
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
-    void showWindow();
     void toggleAutoStart();
 
 private:
