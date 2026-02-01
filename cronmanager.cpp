@@ -109,56 +109,74 @@ void CronManager::checkAndRunJobs()
 void CronManager::executeJob(CronJob& job)
 {
     emit logMessage(QString("Executing job: %1").arg(job.name));
+    emit logMessage(QString("Script path: %1").arg(job.scriptPath));
     
     QProcess* process = new QProcess(this);
-    QString program = job.scriptPath;
+    QString program;
     QStringList args;
-    
-    if (!job.arguments.isEmpty()) {
-        args = job.arguments.split(" ", Qt::SkipEmptyParts);
-    }
     
     // Check if user specified a custom command
     if (job.useCustomCommand && !job.customCommand.isEmpty()) {
-        // Use the custom command as the program
-        program = job.customCommand;
-        args.prepend(job.scriptPath);
-        emit logMessage(QString("Using custom command: %1").arg(program));
+        // Parse custom command - it might contain arguments like "python -u" or "java -jar"
+        QStringList cmdParts = job.customCommand.trimmed().split(" ", Qt::SkipEmptyParts);
+        if (!cmdParts.isEmpty()) {
+            program = cmdParts.takeFirst();  // First part is the program
+            args = cmdParts;                  // Rest are arguments to the program
+        }
+        args.append(job.scriptPath);  // Add script path
+        emit logMessage(QString("Using custom command: %1").arg(job.customCommand));
     } else {
         // Auto-detect based on file extension
         QFileInfo fileInfo(job.scriptPath);
         QString ext = fileInfo.suffix().toLower();
         
         if (ext == "py") {
-            args.prepend(job.scriptPath);
             program = "python";
+            args.append(job.scriptPath);
         } else if (ext == "ps1") {
-            args.prepend(job.scriptPath);
-            args.prepend("-File");
-            args.prepend("-ExecutionPolicy");
-            args.prepend("Bypass");
             program = "powershell";
+            args.append("-ExecutionPolicy");
+            args.append("Bypass");
+            args.append("-File");
+            args.append(job.scriptPath);
         } else if (ext == "bat" || ext == "cmd") {
-            args.prepend(job.scriptPath);
-            args.prepend("/c");
             program = "cmd";
+            args.append("/c");
+            args.append(job.scriptPath);
         } else if (ext == "js") {
-            args.prepend(job.scriptPath);
             program = "node";
+            args.append(job.scriptPath);
         } else if (ext == "rb") {
-            args.prepend(job.scriptPath);
             program = "ruby";
+            args.append(job.scriptPath);
         } else if (ext == "pl") {
-            args.prepend(job.scriptPath);
             program = "perl";
+            args.append(job.scriptPath);
         } else if (ext == "php") {
-            args.prepend(job.scriptPath);
             program = "php";
+            args.append(job.scriptPath);
         } else if (ext == "sh") {
-            args.prepend(job.scriptPath);
             program = "bash";
+            args.append(job.scriptPath);
+        } else {
+            // For .exe and unknown extensions, run directly
+            program = job.scriptPath;
         }
-        // For .exe and unknown extensions, run directly (program = scriptPath)
+    }
+    
+    // Add user's additional arguments
+    if (!job.arguments.isEmpty()) {
+        args.append(job.arguments.split(" ", Qt::SkipEmptyParts));
+    }
+    
+    // Log the full command being executed
+    emit logMessage(QString("Running: %1 %2").arg(program, args.join(" ")));
+    
+    // Set working directory to the script's folder
+    QFileInfo scriptInfo(job.scriptPath);
+    if (scriptInfo.exists()) {
+        process->setWorkingDirectory(scriptInfo.absolutePath());
+        emit logMessage(QString("Working directory: %1").arg(scriptInfo.absolutePath()));
     }
     
     QString jobId = job.id;
