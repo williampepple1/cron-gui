@@ -25,10 +25,16 @@ set(PROJECT_SOURCES
         resources.qrc
 )
 
+# Windows application icon
+if(WIN32)
+    set(APP_ICON_RESOURCE "${CMAKE_CURRENT_SOURCE_DIR}/app.rc")
+endif()
+
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(cron-gui
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        ${APP_ICON_RESOURCE}
     )
 else()
     if(ANDROID)
@@ -38,6 +44,7 @@ else()
     else()
         add_executable(cron-gui
             ${PROJECT_SOURCES}
+            ${APP_ICON_RESOURCE}
         )
     endif()
 endif()
